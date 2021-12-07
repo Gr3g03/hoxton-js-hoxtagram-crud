@@ -18,6 +18,22 @@ function getImagesFromServer(){
 
 
 
+    function createCommentOnServer(imageId, content) {
+        return fetch("http://localhost:3000/comments", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                imageId: imageId,
+                content: content
+            })
+        }).then(function (resp) {
+            return resp.json();
+        });
+    }
+
+
 function renderImgaContainer(){
     imageContainer.innerHTML = ''
     for (const container of state.images){
@@ -41,6 +57,9 @@ function renderImgaContainer(){
     const LikeBtnEl = document.createElement('button')
     LikeBtnEl.setAttribute('class', 'like-button')
     LikeBtnEl.textContent = '♥'
+    LikeBtnEl.addEventListener('click', function(){
+        container.likes++ 
+    })
 
     const comentUlEl = document.createElement('ul')
     comentUlEl.setAttribute('class', 'comments')
@@ -52,6 +71,7 @@ function renderImgaContainer(){
 
     const commentFormSection = document.createElement('form')
     commentFormSection.setAttribute('class', 'comment-form')
+   
 
     const comentInputEl = document.createElement('input')
     comentInputEl.setAttribute('class', 'comment-input')
@@ -63,6 +83,19 @@ function renderImgaContainer(){
     cometBtnPost.setAttribute('class','comment-button')
     cometBtnPost.setAttribute('type','submit')
     cometBtnPost.textContent = 'Post'
+
+
+    commentFormSection.addEventListener('submit' ,function(event){
+        event.preventDefault()
+
+        const content = commentFormSection.comment.value
+        createCommentOnServer(container.id, content).then(
+            function(commentsFromServer){
+                container.comments.push(commentsFromServer)
+                render()
+                commentFormSection.reset()
+            })
+    })
           
     likesDivEl.append(spanEL, LikeBtnEl)
     commentFormSection.append(comentInputEl, cometBtnPost)
