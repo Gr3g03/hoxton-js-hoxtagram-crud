@@ -16,23 +16,44 @@ function getImagesFromServer(){
     // })
 }
 
+function updateLikesOnServer(image) {
+	return fetch(`http://localhost:3000/images/${image.id}`, {
+		method: "PATCH",
+		headers: {
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify({
+			likes: image.likes
+		})
+	}).then((resp) => resp.json());
+}
 
-
-    function createCommentOnServer(imageId, content) {
-        return fetch("http://localhost:3000/comments", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
+function createCommentOnServer(imageId, content) {
+    return fetch("http://localhost:3000/comments", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                imageId: imageId,
-                content: content
-            })
+        body: JSON.stringify({
+            imageId: imageId,
+            content: content
+        })
         }).then(function (resp) {
             return resp.json();
         });
-    }
+}
 
+function deleteComentsFromServer(id){
+	return fetch(`http://localhost:3000/comments/${id}`, {
+		method: "DELETE"
+	});
+}
+
+function deleteImagesFromServer(id){
+	return fetch(`http://localhost:3000/images/${id}`, {
+		method: "DELETE"
+	});
+}
 
 function renderImgaContainer(){
     imageContainer.innerHTML = ''
@@ -47,6 +68,14 @@ function renderImgaContainer(){
     imageEl.setAttribute('class', 'image')
     imageEl.setAttribute('src', container.image)
 
+    const deleteImgBtn = document.createElement('button')
+    deleteImgBtn.textContent = 'X'
+    deleteImgBtn.addEventListener('click', function(){
+        state.images = state.images.filter((target) => target !== container)
+        deleteImagesFromServer(container.id)
+        render()
+      })
+
     const likesDivEl = document.createElement('div')
     likesDivEl.setAttribute ('class', 'likes-section')
 
@@ -59,14 +88,28 @@ function renderImgaContainer(){
     LikeBtnEl.textContent = '♥'
     LikeBtnEl.addEventListener('click', function(){
         container.likes++ 
+        updateLikesOnServer(container)
+        render()
     })
 
     const comentUlEl = document.createElement('ul')
     comentUlEl.setAttribute('class', 'comments')
+
     for (const comment of container.comments){
         const comentLiEl = document.createElement('li')
         comentLiEl.textContent = comment.content
-        comentUlEl.append(comentLiEl)
+        
+       const deleteBtn = document.createElement('button')
+       deleteBtn.textContent = 'delete' 
+       deleteBtn.addEventListener('click', function () {
+
+
+        container.comments = container.comments.filter((target) => target !== comment)
+        deleteComentsFromServer(comment.id)
+        render()
+      })
+      comentLiEl.append(deleteBtn)
+      comentUlEl.append(comentLiEl)
     }
 
     const commentFormSection = document.createElement('form')
@@ -96,10 +139,13 @@ function renderImgaContainer(){
                 commentFormSection.reset()
             })
     })
+
+
+   
           
     likesDivEl.append(spanEL, LikeBtnEl)
     commentFormSection.append(comentInputEl, cometBtnPost)
-    articleEl.append(h2TextEl, imageEl, likesDivEl, comentUlEl, commentFormSection)
+    articleEl.append(h2TextEl, imageEl, likesDivEl, comentUlEl, commentFormSection, deleteImgBtn)
     imageContainer.append(articleEl)
 
 
